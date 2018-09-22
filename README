@@ -1,0 +1,83 @@
+#DOCUMENTOS
+
+reset.sql -- contiene el plsql que al correrlo dropea todas las tablas, las vuelve a crear y ejecuta el script de conciliacion
+
+tpe-backup.sql -- es el estado inicial del tpe
+
+TP_BD_2.sql -- ejecuta la conciliacion y cuenta la cantidad de tuplas que se insertaron
+
+#IMGS
+
+conciliate_all_statements_orig.png -- muestra la primera corrida del script y el tiempo que tardo
+
+altertablespace.png -- el error que nos tiro, por eso tuvimos que extender los tablespaces
+
+error-oru10027.png -- error de buffer de la consola, por lo que eliminamos los prints
+
+#PASOS
+
+1-
+	+ hicimos un backup del sql
+	+ alteramos los tablespaces
+		ALTER database datafile '$ORACLE_HOME/dbs/S2T1_INDEXES.ora' AUTOEXTEND ON
+		ALTER database datafile '$ORACLE_HOME/dbs/S2T1_DATA.ora' AUTOEXTEND ON
+	+ eliminamos algunos comments y corrimos para hacer las mediciones
+		tiempo inicial :
+		cant de inserciones :
+	+ creamos script para hacer el reset de la base
+2-
+	.1
+	+ cambiamos la columna STATUS de HOTEL_STATEMENT de CHAR 200 a CHAR 20
+	+ en supplier podriamos ver de cambiar conciliation criteria y status
+	+ achicamos el NEXT de HOTEL_STATEMENT por uno menor para no generar despecidio de espacio, lo mismo para PO y supplier
+	.2
+	+ droppeamos los indices sin usar PO1 y PO3
+	+ droppeamos todos los indices de conciliation
+	+ creamos un nuevo indice en payment_order PO4
+	+ droppeamos los PK de PO y conciliation y los reemplazamos por un nuevo PK y FK respectivamente
+	+ cambiamos los PK de las otras tablas por pk unique
+	+ se eliminan las sequencias de las tablas y se altera la sequencia de conciliation por una sin limite NOMAXVALUE
+	+ en conciliation modificamos el PCTFREE y PCTUSED y achicamos la columna status
+
+3-
+	.1
+	+ SELECT 1 (29 469 HOTEL_STATEMENT_PK) con CBO
+	+ SELECT 2 (29 476 SUPPLIER_PK)
+	+ SELECT 3 (29 496)
+	+ SELECT 4 (29 374 INDEX)
+	+ para los update statements vamos a tener una mejora por agregar las PK unique
+	.2
+	+ Select 1 y 2 se pueden combinar en uno
+	+ SELECT 4 podemos evitar el JOIN
+	+ Luego el select 3 se puede unir con el select 2 ---> select 5
+	+ Fijarse cual usar entre el 4 y el 5 ( con el indice en PO4 seguro queda mejor el 4)
+	.3
+	+ Hacer las mediciones de los nuevos selects y calcular la diferencia
+
+.4
+	+ permitir unlimited max extents para tables e indexes
+	+ agregar exception para los marches que no funcionan
+
+	
+
+
+
+#PRODECIMIENTO
+
+1- Ejecutar el procedure, medir los tiempos e inserciones de la version original
+
+2- Analisis para mejorar el procedure
+
+	2.1- Optimizacion de los tipos de datos
+	2.2- Optimizacion de los indices
+
+3- Mejora de procedure
+
+	3.1- Explain plan para los SELECTS y INSERTS
+	3.2- Optimizacion de flujo de procedure
+	3.3- Medir diferencias
+
+4- Mejora futura de la base de datos
+
+
+
