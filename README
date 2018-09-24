@@ -24,23 +24,31 @@ error-oru10027.png -- error de buffer de la consola, por lo que eliminamos los p
 	+ eliminamos algunos comments y corrimos para hacer las mediciones
 		tiempo inicial :
 		cant de inserciones :
-	+ creamos script para hacer el reset de la base
+	+ creamos script para hacer el reset de la base (tpe-backup.sql)
 2-
 	.1
 	+ cambiamos la columna STATUS de HOTEL_STATEMENT de CHAR 200 a CHAR 20
+		- lo cambie directamente en el tpe-backup.sql
 	+ en supplier podriamos ver de cambiar conciliation criteria y status
+		- quiza no tenga sentido
 	+ achicamos el NEXT de HOTEL_STATEMENT por uno menor para no generar despecidio de espacio, lo mismo para PO y supplier
+		- directamente modificado en el next a la hora de crear las tablas
+	+ cambiamos el PCTINCREASE de conciliation para el storage
+		- directamente modificado en el storage de tpe-backup
 	.2
-	+ droppeamos los indices sin usar PO1 y PO3
 	+ droppeamos todos los indices de conciliation
+		- comentado en tpe-backup.sql
 	+ creamos un nuevo indice en payment_order PO4
-	+ droppeamos los PK de PO y conciliation y los reemplazamos por un nuevo PK y FK respectivamente
+		- tpe-backup.sql: 29299 habria que ver s es mejor que el que ya esta
 	+ cambiamos los PK de las otras tablas por pk unique
-	+ se eliminan las sequencias de las tablas y se altera la sequencia de conciliation por una sin limite NOMAXVALUE
+		- alter tables add constraint pk en el final de los DDLs en tpe-backup.sql
 	+ en conciliation modificamos el PCTFREE y PCTUSED y achicamos la columna status
+		- hecho en el create table de la tabla
+	+ eliminamos las secuencias de valores pq no se usan excepto la de conciliation que quedan en NOMAXVALUE
+		- modificado en tpe-backup.sql
 
 3-
-	.1
+	.1 ( no se si estan bien las lineas pero tenian esos nombres en los comentarios)
 	+ SELECT 1 (29 469 HOTEL_STATEMENT_PK) con CBO
 	+ SELECT 2 (29 476 SUPPLIER_PK)
 	+ SELECT 3 (29 496)
@@ -48,15 +56,20 @@ error-oru10027.png -- error de buffer de la consola, por lo que eliminamos los p
 	+ para los update statements vamos a tener una mejora por agregar las PK unique
 	.2
 	+ Select 1 y 2 se pueden combinar en uno
+		- combinados, ahora esta el nuevo en 29530
 	+ SELECT 4 podemos evitar el JOIN
+		- modificado en 29414
 	+ Luego el select 3 se puede unir con el select 2 ---> select 5
+		- no lo hicimos por que el 4 es mas eficiente
 	+ Fijarse cual usar entre el 4 y el 5 ( con el indice en PO4 seguro queda mejor el 4)
 	.3
 	+ Hacer las mediciones de los nuevos selects y calcular la diferencia
 
 .4
-	+ permitir unlimited max extents para tables e indexes
-	+ agregar exception para los marches que no funcionan
+	+ permitir unlimited max extents para tables e 
+		- hecho en tpe-backup.sql
+
+NOTA: tuve que modificar las declaraciones del procedure
 
 	
 
